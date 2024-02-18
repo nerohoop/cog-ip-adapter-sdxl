@@ -2,7 +2,8 @@
 from cog import BasePredictor, Input, Path
 import os
 import sys
-sys.path.extend(['/IP-Adapter'])
+
+sys.path.extend(["/IP-Adapter"])
 import torch
 import shutil
 from PIL import Image
@@ -10,20 +11,31 @@ from typing import List
 from ip_adapter import IPAdapterPlusXL
 from ip_adapter.custom_pipelines import StableDiffusionXLCustomPipeline
 
+
 base_model_path = "stabilityai/stable-diffusion-xl-base-1.0"
 image_encoder_path = "/IP-Adapter/models/image_encoder/"
-ip_ckpt = "/IP-Adapter/sdxl_models/ip-adapter-plus-face_sdxl_vit-h.bin"
+
+## TODO: which one is a better solution?
+ip_ckpt = "/IP-Adapter/sdxl_models/ip-adapter-_sdxl.bin"
+# ip_ckpt = "/IP-Adapter/sdxl_models/ip-adapter-plus-_sdxl_vit-h.bin"
+
 device = "cuda"
 MODEL_CACHE = "model-cache"
 
-def load_image(path):
-        shutil.copyfile(path, "/tmp/image.png")
-        return load_image("/tmp/image.png").convert("RGB")
+## InstantID
+## https://github.com/zsxkib/InstantID/blob/main/cog.yaml
+
 
 class Predictor(BasePredictor):
     def setup(self) -> None:
         """Load the model into memory to make running multiple predictions efficient"""
-        # load SDXL pipeline
+
+        # Setup any one-off operations like loading trained models
+        # Many models use this method to download weights
+
+        # Alternatively, we can store weights directly in the image
+        # alongside cog.yaml, update .dockerignore file
+
         self.pipe = StableDiffusionXLCustomPipeline.from_pretrained(
             base_model_path,
             torch_dtype=torch.float16,
@@ -33,22 +45,16 @@ class Predictor(BasePredictor):
 
     def predict(
         self,
-        image: Path = Input(
-             description="Input face image"
-        ),
+        image: Path = Input(description="Ip adapter image", default=None),
         prompt: str = Input(
-            description="Prompt (leave blank for image variations)",
-            default=""
+            description="Prompt (leave blank for image variations)", default=""
         ),
-        negative_prompt: str = Input(
-            description="Negative Prompt",
-            default=""
-        ),
+        negative_prompt: str = Input(description="Negative Prompt", default=""),
         scale: float = Input(
             description="Scale (influence of input image on generation)",
             ge=0.0,
             le=1.0,
-            default=0.6
+            default=0.4,
         ),
         num_outputs: int = Input(
             description="Number of images to output.",
@@ -64,15 +70,27 @@ class Predictor(BasePredictor):
         ),
     ) -> List[Path]:
         """Run a single prediction on the model"""
+
+        """ 1. pre-processing """
+
+        # Create a random seed if not provided
         if seed is None:
             seed = int.from_bytes(os.urandom(2), "big")
         print(f"Using seed: {seed}")
 
+        # IP-Adapter works best for square images
+        # But you can just resize to 224x224 for non-square images
         image = Image.open(image)
         image.resize((224, 224))
 
         # load ip-adapter
-        ip_model = IPAdapterPlusXL(self.pipe, image_encoder_path, ip_ckpt, device, num_tokens=16)
+        ip_model = IPAdapterPlusXL(
+            self.pipe, image_encoder_path, ip_ckpt, device, num_tokens=16
+        )
+
+        ## TODO: load the correct weights
+
+        """ 2. run prediction """
 
         images = ip_model.generate(
             pil_image=image,
@@ -81,13 +99,16 @@ class Predictor(BasePredictor):
             seed=seed,
             prompt=prompt,
             negative_prompt=negative_prompt,
-            scale=scale
+            scale=scale,
         )
 
+        """ 3. post-processing """
+
+        ## TODO: check for NSFW content
         output_paths = []
-        for i, _ in enumerate(images):
-            output_path = f"/tmp/out-{i}.png"
-            images[i].save(output_path)
+        for i, output_image in enumerate(images):
+            output_path = f"/tmp/out_{i}.png"
+            output_image.save(output_path)
             output_paths.append(Path(output_path))
-            
+
         return output_paths
