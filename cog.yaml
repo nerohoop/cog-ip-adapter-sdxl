@@ -17,7 +17,7 @@ build:
     - cd /IP-Adapter/models/image_encoder && wget https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors
     - cd /IP-Adapter/models/image_encoder && wget https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/pytorch_model.bin
 
-  image: "r8.im/nerohoop/ip-adapter-sdxl"
-
 # predict.py defines how predictions are run on your model
 predict: "predict.py:Predictor"
+
+image: "r8.im/nerohoop/ip-adapter-sdxl"
