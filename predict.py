@@ -16,7 +16,7 @@ base_model_path = "stabilityai/stable-diffusion-xl-base-1.0"
 image_encoder_path = "/IP-Adapter/models/image_encoder/"
 
 ## TODO: which one is a better solution?
-ip_ckpt = "/IP-Adapter/sdxl_models/ip-adapter-_sdxl.bin"
+ip_ckpt = "/IP-Adapter/sdxl_models/ip-adapter_sdxl.bin"
 # ip_ckpt = "/IP-Adapter/sdxl_models/ip-adapter-plus-_sdxl_vit-h.bin"
 
 device = "cuda"
