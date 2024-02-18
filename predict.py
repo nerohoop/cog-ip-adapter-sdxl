@@ -8,7 +8,7 @@ import torch
 import shutil
 from PIL import Image
 from typing import List
-from ip_adapter import IPAdapterPlusXL
+from ip_adapter import IPAdapterXL
 from ip_adapter.custom_pipelines import StableDiffusionXLCustomPipeline
 
 
@@ -84,7 +84,7 @@ class Predictor(BasePredictor):
         image.resize((224, 224))
 
         # load ip-adapter
-        ip_model = IPAdapterPlusXL(
+        ip_model = IPAdapterXL(
             self.pipe, image_encoder_path, ip_ckpt, device, num_tokens=16
         )
 
