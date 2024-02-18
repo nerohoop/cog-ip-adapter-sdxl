@@ -13,7 +13,7 @@ from diffusers import StableDiffusionXLPipeline
 
 
 base_model_path = "stabilityai/stable-diffusion-xl-base-1.0"
-image_encoder_path = "/IP-Adapter/models/image_encoder/"
+image_encoder_path = "/IP-Adapter/sdxl_models/image_encoder/"
 
 ## TODO: which one is a better solution?
 ip_ckpt = "/IP-Adapter/sdxl_models/ip-adapter_sdxl.bin"
