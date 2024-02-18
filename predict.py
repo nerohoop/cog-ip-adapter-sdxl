@@ -9,7 +9,7 @@ import shutil
 from PIL import Image
 from typing import List
 from ip_adapter import IPAdapterXL
-from ip_adapter.custom_pipelines import StableDiffusionXLCustomPipeline
+from diffusers import StableDiffusionXLPipeline
 
 
 base_model_path = "stabilityai/stable-diffusion-xl-base-1.0"
@@ -36,7 +36,7 @@ class Predictor(BasePredictor):
         # Alternatively, we can store weights directly in the image
         # alongside cog.yaml, update .dockerignore file
 
-        self.pipe = StableDiffusionXLCustomPipeline.from_pretrained(
+        self.pipe = StableDiffusionXLPipeline.from_pretrained(
             base_model_path,
             torch_dtype=torch.float16,
             add_watermarker=False,
