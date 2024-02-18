@@ -11,7 +11,6 @@ from typing import List
 from ip_adapter import IPAdapterXL
 from diffusers import StableDiffusionXLPipeline
 
-
 base_model_path = "stabilityai/stable-diffusion-xl-base-1.0"
 image_encoder_path = "/IP-Adapter/sdxl_models/image_encoder"
 
@@ -84,9 +83,7 @@ class Predictor(BasePredictor):
         image.resize((224, 224))
 
         # load ip-adapter
-        ip_model = IPAdapterXL(
-            self.pipe, image_encoder_path, ip_ckpt, device, num_tokens=16
-        )
+        ip_model = IPAdapterXL(self.pipe, image_encoder_path, ip_ckpt, device)
 
         ## TODO: load the correct weights
 
