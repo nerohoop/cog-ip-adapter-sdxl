@@ -57,6 +57,7 @@ class Predictor(BasePredictor):
             use_safetensors=True,
             torch_dtype=torch.float16,
             add_watermarker=False,
+            cache_dir=MODEL_CACHE,
         ).to(device)
 
     def predict(
