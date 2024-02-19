@@ -9,16 +9,11 @@ import shutil
 from PIL import Image
 from typing import List
 from ip_adapter import IPAdapterXL
-from diffusers import (
-    StableDiffusionXLControlNetPipeline,
-    ControlNetModel,
-    StableDiffusionXLPipeline,
-)
+from diffusers import StableDiffusionXLPipeline
 
 
 base_model_path = "stabilityai/stable-diffusion-xl-base-1.0"
 image_encoder_path = "/IP-Adapter/sdxl_models/image_encoder"
-controlnet_path = "diffusers/controlnet-depth-sdxl-1.0"
 
 ## TODO: which one is a better solution?
 ip_ckpt = "/IP-Adapter/sdxl_models/ip-adapter_sdxl.bin"
@@ -43,22 +38,12 @@ class Predictor(BasePredictor):
         # Alternatively, we can store weights directly in the image
         # alongside cog.yaml, update .dockerignore file
 
-        # load SDXL pipeline
-        controlnet = ControlNetModel.from_pretrained(
-            controlnet_path,
-            variant="fp16",
-            use_safetensors=True,
-            torch_dtype=torch.float16,
-        ).to(device)
-
-        self.pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
+        self.pipe = StableDiffusionXLPipeline.from_pretrained(
             base_model_path,
-            controlnet=controlnet,
-            use_safetensors=True,
             torch_dtype=torch.float16,
             add_watermarker=False,
             cache_dir=MODEL_CACHE,
-        ).to(device)
+        )
 
     def predict(
         self,
@@ -98,7 +83,7 @@ class Predictor(BasePredictor):
         # IP-Adapter works best for square images
         # But you can just resize to 224x224 for non-square images
         image = Image.open(image)
-        image.resize((256, 256))
+        image.resize((512, 512))
 
         # load ip-adapter
         ip_model = IPAdapterXL(self.pipe, image_encoder_path, ip_ckpt, device)
@@ -109,12 +94,12 @@ class Predictor(BasePredictor):
 
         images = ip_model.generate(
             pil_image=image,
-            controlnet_conditioning_scale=0.6,
             num_samples=num_outputs,
             num_inference_steps=num_inference_steps,
             seed=seed,
             prompt=prompt,
             negative_prompt=negative_prompt,
+            scale=scale,
         )
 
         """ 3. post-processing """
